@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: django-api
+    env: python
+    plan: free
+    buildCommand: "./.render/build.sh"
+    startCommand: "gunicorn kaka.wsgi:application"
+    autoDeploy: true
