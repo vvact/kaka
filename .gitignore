@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pdb
+
+# Environment
+.env
+.venv/
+venv/
+ENV/
+env.bak/
+*.env
+
+# Django
+
+media/
+staticfiles/
+local_settings.py
+settings_local.py
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store
+
+# Node (if you use React frontend in same repo)
+node_modules/
+build/
+dist/
+
+# Coverage and test
+htmlcov/
+.coverage
+.tox/
+.nox/
+pytest_cache/
+
+# Logs
+*.log
+logs/
+
+# Migrations (optional — useful during early dev)
+**/migrations/*.py
+!**/migrations/__init__.py
+
+# Byte-compiled
+*.so
+
+# MyPy, Pylint, etc.
+.mypy_cache/
+.pytest_cache/
+.cache/
+.dmypy.json
+.pyre/
+
+# Docker
+*.pid
+*.pid.lock
+
+# JetBrains (PyCharm)
+.idea/
