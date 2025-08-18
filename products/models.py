@@ -2,11 +2,12 @@
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta
+from cloudinary.models import CloudinaryField
 
 class Category(models.Model):
     name = models.CharField(max_length=255, db_index=True)
     slug = models.SlugField(unique=True, db_index=True)
-    image = models.ImageField(upload_to="categories/", blank=True, null=True)
+    image = CloudinaryField('image', folder='categories', blank=True, null=True)
     is_active = models.BooleanField(default=True, db_index=True)
 
     class Meta:
