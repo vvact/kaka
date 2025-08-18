@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "accounts",
     # 'products.apps.ProductsConfig',
     'cart.apps.CartConfig',
+    'moments',
 ]
 
 MIDDLEWARE = [

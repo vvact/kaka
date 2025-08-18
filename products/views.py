@@ -1,12 +1,27 @@
-# views.py
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Prefetch, Min, Max, Q, Case, When, DecimalField, F, Count
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
-
-from .models import Product, Variant, Category
+from rest_framework import generics
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Q
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Min, Max, Case, When, DecimalField
+from django.db.models.functions import Coalesce
+from django.db.models import Prefetch
+from rest_framework import generics
+from .models import Product, ProductImage
+from .serializers import ProductListSerializer
+from django.db.models import Min, Max, Case, When, DecimalField
+from django.db.models.functions import Coalesce
+from rest_framework import generics
+from .models import Product
+from .serializers import ProductListSerializer
+from .models import Product, ProductImage, Variant, Category
 from .serializers import ProductSerializer, ProductListSerializer, VariantSerializer, CategorySerializer
 
 
@@ -80,10 +95,8 @@ class VariantViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Variant.objects.prefetch_related("attributes__attribute", "image").select_related("product")
 
 
+
 class ProductListViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Lightweight list endpoint for products with featured image and pre-annotated price.
-    """
     serializer_class = ProductListSerializer
     queryset = Product.objects.all()
 
@@ -93,6 +106,24 @@ class ProductListViewSet(viewsets.ReadOnlyModelViewSet):
         if search:
             qs = qs.filter(Q(name__icontains=search) | Q(slug__icontains=search))
 
+        # --- FEATURED FILTER ---
+        featured = self.request.query_params.get("featured")
+        if featured is not None:
+            if featured.lower() == 'true':
+                qs = qs.filter(is_featured=True)
+            elif featured.lower() == 'false':
+                qs = qs.filter(is_featured=False)
+
+        # --- NEW ARRIVALS FILTER ---
+        new_arrivals = self.request.query_params.get("new_arrivals")
+        if new_arrivals is not None:
+            last_30_days = timezone.now() - timedelta(days=30)
+            if new_arrivals.lower() == 'true':
+                qs = qs.filter(created_at__gte=last_30_days)
+            elif new_arrivals.lower() == 'false':
+                qs = qs.exclude(created_at__gte=last_30_days)
+
+        # Annotate min/max price if needed
         qs = qs.annotate(
             min_price=Case(
                 When(has_variants=False, then=Coalesce("discount_price", "base_price")),
@@ -103,15 +134,11 @@ class ProductListViewSet(viewsets.ReadOnlyModelViewSet):
                 When(has_variants=False, then=Coalesce("discount_price", "base_price")),
                 default=Max("variants__price"),
                 output_field=DecimalField(max_digits=12, decimal_places=2)
-            ),
-            original_price=Case(
-                When(min_price=F('max_price'), then=None),
-                default=F('max_price'),
-                output_field=DecimalField(max_digits=12, decimal_places=2)
             )
         )
 
         return qs.prefetch_related("images")
+
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -170,3 +197,83 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
         data = serializer.data
         data['products'] = ProductListSerializer(category.products.all(), many=True, context={'request': request}).data
         return Response(data)
+
+
+
+
+
+class FeaturedProductsAPIView(generics.ListAPIView):
+    serializer_class = ProductListSerializer
+
+    def get_queryset(self):
+        qs = Product.objects.filter(is_featured=True)
+
+        # Annotate min_price and max_price (required by serializer)
+        qs = qs.annotate(
+            min_price=Case(
+                When(has_variants=False, then=Coalesce("discount_price", "base_price")),
+                default=Min("variants__price"),
+                output_field=DecimalField(max_digits=12, decimal_places=2)
+            ),
+            max_price=Case(
+                When(has_variants=False, then=Coalesce("discount_price", "base_price")),
+                default=Max("variants__price"),
+                output_field=DecimalField(max_digits=12, decimal_places=2)
+            )
+        )
+
+        # Prefetch featured images
+        qs = qs.prefetch_related(
+            Prefetch(
+                'images',
+                queryset=ProductImage.objects.filter(is_featured=True),
+                to_attr='featured_images'
+            )
+        ).order_by('-created_at')
+
+        return qs
+
+    
+
+class NewArrivalsAPIView(generics.ListAPIView):
+    serializer_class = ProductListSerializer
+
+    def get_queryset(self):
+        last_30_days = timezone.now() - timedelta(days=30)
+        return Product.objects.filter(created_at__gte=last_30_days, is_active=True).prefetch_related('images').order_by('-created_at')
+    
+
+
+
+
+class NewArrivalsAPIView(generics.ListAPIView):
+    serializer_class = ProductListSerializer
+
+    def get_queryset(self):
+        last_30_days = timezone.now() - timedelta(days=30)
+        qs = Product.objects.filter(is_active=True, created_at__gte=last_30_days)
+
+        # Annotate min_price and max_price (required by serializer)
+        qs = qs.annotate(
+            min_price=Case(
+                When(has_variants=False, then=Coalesce("discount_price", "base_price")),
+                default=Min("variants__price"),
+                output_field=DecimalField(max_digits=12, decimal_places=2)
+            ),
+            max_price=Case(
+                When(has_variants=False, then=Coalesce("discount_price", "base_price")),
+                default=Max("variants__price"),
+                output_field=DecimalField(max_digits=12, decimal_places=2)
+            )
+        )
+
+        # Prefetch featured images
+        qs = qs.prefetch_related(
+            Prefetch(
+                'images',
+                queryset=ProductImage.objects.filter(is_featured=True),
+                to_attr='featured_images'
+            )
+        ).order_by('-created_at')
+
+        return qs
