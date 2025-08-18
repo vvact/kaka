@@ -7,7 +7,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('products.urls')),  # or whatever your app is called
     path('api/', include('cart.urls')),  # Include cart URLs
-    path('api/moments/', include('moments.urls')),  # Include moments URLs
+    path('api/', include('moments.urls')),  # Include moments URLs
 ]
 
 if settings.DEBUG:
