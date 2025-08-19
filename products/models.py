@@ -97,7 +97,7 @@ class Variant(models.Model):
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images", db_index=True)
-    image = CloudinaryField(upload_to="product_images/")
+    image = CloudinaryField('image', folder='product_images', blank=True, null=True)
     alt_text = models.CharField(max_length=255, blank=True)
     is_featured = models.BooleanField(default=False, db_index=True)
 
@@ -116,7 +116,7 @@ class ProductImage(models.Model):
 
 class VariantImage(models.Model):
     variant = models.OneToOneField(Variant, on_delete=models.CASCADE, related_name="image", db_index=True)
-    image = CloudinaryField(upload_to="variant_images/")
+    image = CloudinaryField('image', folder='variant_images/', blank=True, null=True)
     alt_text = models.CharField(max_length=255, blank=True)
 
     class Meta:
