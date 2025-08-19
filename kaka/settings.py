@@ -170,6 +170,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://ecommerce-frontend-six-lake.vercel.app",
+    "https://ecommerce-frontend-six-lake.vercel.app",
     "https://kaka-mtfj.onrender.com",
 ]
 
