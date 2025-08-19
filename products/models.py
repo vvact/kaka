@@ -36,7 +36,6 @@ class AttributeValue(models.Model):
     attribute = models.ForeignKey(Attribute, related_name="values", on_delete=models.CASCADE)
     name = models.CharField(max_length=100, db_index=True)
     hex_code = models.CharField(max_length=7, blank=True, null=True)  # Optional for colors
-    image = models.ImageField(upload_to="attribute_images/", blank=True, null=True)
     slug = models.SlugField(unique=True, db_index=True)
 
     class Meta:
@@ -98,7 +97,7 @@ class Variant(models.Model):
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images", db_index=True)
-    image = models.ImageField(upload_to="product_images/")
+    image = CloudinaryField(upload_to="product_images/")
     alt_text = models.CharField(max_length=255, blank=True)
     is_featured = models.BooleanField(default=False, db_index=True)
 
@@ -117,7 +116,7 @@ class ProductImage(models.Model):
 
 class VariantImage(models.Model):
     variant = models.OneToOneField(Variant, on_delete=models.CASCADE, related_name="image", db_index=True)
-    image = models.ImageField(upload_to="variant_images/")
+    image = CloudinaryField(upload_to="variant_images/")
     alt_text = models.CharField(max_length=255, blank=True)
 
     class Meta:

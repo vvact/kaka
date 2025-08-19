@@ -18,7 +18,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class AttributeValueSerializer(serializers.ModelSerializer):
     class Meta:
         model = AttributeValue
-        fields = ["id", "name", "slug", "hex_code", "image"]
+        fields = ["id", "name", "slug", "hex_code",]
 
 
 class AttributeSerializer(serializers.ModelSerializer):
