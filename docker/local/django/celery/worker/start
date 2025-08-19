@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+
+watchmedo auto-restart \
+  -d kaka/ \
+  -p "*.py" \
+  -- celery -A kaka worker --loglevel=info

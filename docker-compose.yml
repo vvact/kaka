@@ -1,0 +1,117 @@
+services:
+  # Django API Service
+  api:
+    build:
+      context: .
+      dockerfile: ./docker/local/django/Dockerfile
+    command: /start
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/mediafiles
+    expose:
+      - "8000"  # Exposes port to other services (used by Nginx)
+    env_file:
+      - .env
+    depends_on:
+      - postgres-db
+      - redis
+    networks:
+      - ecommerce
+
+  # PostgreSQL Database
+  postgres-db:
+    image: postgres:13-alpine
+    ports:
+      - "5432:5432"  # Optional for local development
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    networks:
+      - ecommerce
+
+  # Redis for Celery and caching
+  redis:
+    image: redis:5-alpine
+    networks:
+      - ecommerce
+
+  # Celery Worker for async tasks
+  celery_worker:
+    build:
+      context: .
+      dockerfile: ./docker/local/django/Dockerfile
+    command: /start-celeryworker
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - postgres-db
+    networks:
+      - ecommerce
+
+  # Flower - Monitoring Celery Tasks
+  flower:
+    build:
+      context: .
+      dockerfile: ./docker/local/django/Dockerfile
+    command: /start-flower
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    ports:
+      - "5557:5555"  # Access Flower UI at localhost:5557
+    depends_on:
+      - redis
+      - postgres-db
+    networks:
+      - ecommerce
+
+  # Nginx for serving static/media files and reverse proxy
+  nginx:
+    restart: always
+    depends_on:
+      - api
+    build:
+      context: ./docker/local/nginx
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"  # Maps host port 8080 to container's port 80
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/mediafiles
+    networks:
+      - ecommerce
+
+  # Optional: React Frontend (Enable when ready)
+  # client:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: ecommerce_client
+  #   ports:
+  #     - "3000:3000"  # Access frontend at localhost:3000
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #   stdin_open: true
+  #   tty: true
+  #   networks:
+  #     - ecommerce
+
+# Docker network for internal service communication
+networks:
+  ecommerce:
+    driver: bridge
+
+# Volumes for persistent and shared data
+volumes:
+  postgres_data:      # PostgreSQL persistent storage
+  static_volume:      # Static files collected by Django
+  media_volume:       # Media files uploaded by users

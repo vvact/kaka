@@ -1,0 +1,36 @@
+# IDEs
+**/.idea
+**/.vscode
+**/.vs
+**/.settings
+**/.project
+**/.toolstarget
+
+# Python & Django
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.coverage*
+**/.env
+**/.celerybeat.pid*
+**/*.sqlite3
+
+# Git
+**/.git
+**/.gitignore
+
+# Node / React
+**/node_modules
+**/npm-debug.log
+
+# Docker
+**/Dockerfile*
+**/docker-compose*
+
+# Secrets
+**/secrets.dev.yaml
+**/values.dev.yaml
+
+# Docs
+README.md
