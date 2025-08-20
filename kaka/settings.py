@@ -1,15 +1,10 @@
-import os 
-from decouple import config
-
-import cloudinary
 import os
-import dj_database_url
-from pathlib import Path
-
-
-
 from pathlib import Path
 from decouple import config, Csv
+import cloudinary
+import dj_database_url
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -109,13 +104,13 @@ WSGI_APPLICATION = "kaka.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv("DATABASE_URL", "sqlite:///db.sqlite3"),
-        conn_max_age=600,
-        ssl_require=False
-    )
-}
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         default=os.getenv("DATABASE_URL", "sqlite:///db.sqlite3"),
+#         conn_max_age=600,
+#         ssl_require=False
+#     )
+# }
 
 
 DATABASES = {
@@ -195,12 +190,18 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = True
 
 
-
-# Cloudinary configuration
-CLOUDINARY_STORAGE = {
-    "CLOUD_NAME": config("CLOUDINARY_CLOUD_NAME"),
-    "API_KEY": config("CLOUDINARY_API_KEY"),
-    "API_SECRET": config("CLOUDINARY_API_SECRET"),
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": config("REDIS_URL"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
 }
+
+
+CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 
 
