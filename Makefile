@@ -14,6 +14,9 @@ build: ## Build and start containers
 
 up: ## Start containers
 	docker compose up -d
+	docker compose down -v   # optional: remove old containers and volumes if DB creds changed
+    docker compose up -d --build
+
 
 down: ## Stop containers
 	docker compose down
