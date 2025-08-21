@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   # Django API Service
   api:
@@ -10,7 +12,7 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/mediafiles
     expose:
-      - "8000"  # Exposes port to other services (used by Nginx)
+      - "8000"
     env_file:
       - .env
     depends_on:
@@ -18,26 +20,29 @@ services:
       - redis
     networks:
       - ecommerce
+    restart: unless-stopped
 
   # PostgreSQL Database
   postgres-db:
     image: postgres:13-alpine
     ports:
-      - "5432:5432"  # Optional for local development
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - "5432:5432"  # optional for local dev
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - ecommerce
+    restart: unless-stopped
 
   # Redis for Celery and caching
   redis:
     image: redis:5-alpine
     networks:
       - ecommerce
+    restart: unless-stopped
 
   # Celery Worker for async tasks
   celery_worker:
@@ -54,6 +59,7 @@ services:
       - postgres-db
     networks:
       - ecommerce
+    restart: unless-stopped
 
   # Flower - Monitoring Celery Tasks
   flower:
@@ -66,28 +72,29 @@ services:
     env_file:
       - .env
     ports:
-      - "5557:5555"  # Access Flower UI at localhost:5557
+      - "5557:5555"
     depends_on:
       - redis
       - postgres-db
     networks:
       - ecommerce
+    restart: unless-stopped
 
   # Nginx for serving static/media files and reverse proxy
   nginx:
-    restart: always
-    depends_on:
-      - api
     build:
       context: ./docker/local/nginx
       dockerfile: Dockerfile
+    depends_on:
+      - api
     ports:
-      - "80:80"  # Maps host port 80 to container's port 80
+      - "80:80"
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/mediafiles
     networks:
       - ecommerce
+    restart: unless-stopped
 
   # Optional: React Frontend (Enable when ready)
   # client:
@@ -96,7 +103,7 @@ services:
   #     dockerfile: Dockerfile
   #   container_name: ecommerce_client
   #   ports:
-  #     - "3000:3000"  # Access frontend at localhost:3000
+  #     - "3000:3000"
   #   volumes:
   #     - ./frontend:/app
   #     - /app/node_modules
@@ -104,14 +111,32 @@ services:
   #   tty: true
   #   networks:
   #     - ecommerce
+  #   restart: unless-stopped
 
 # Docker network for internal service communication
 networks:
   ecommerce:
     driver: bridge
 
-# Volumes for persistent and shared data
+# Volumes for persistent and shared data, bound to host directories
 volumes:
-  postgres_data:      # PostgreSQL persistent storage
-  static_volume:      # Static files collected by Django
-  media_volume:       # Media files uploaded by users
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/ubuntu/postgres_data
+      o: bind
+
+  static_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/ubuntu/staticfiles
+      o: bind
+
+  media_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/ubuntu/mediafiles
+      o: bind
