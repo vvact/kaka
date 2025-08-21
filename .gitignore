@@ -11,12 +11,12 @@ __pycache__/
 venv/
 ENV/
 env.bak/
-*.env
+
 
 # Django
 
-media/
-staticfiles/
+
+
 local_settings.py
 settings_local.py
 
