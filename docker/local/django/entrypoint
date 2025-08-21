@@ -1,23 +1,22 @@
 #!/bin/bash
-
 set -o errexit
-
 set -o pipefail
-
 set -o nounset
 
+# Function to check if Postgres is ready
 postgres_ready() {
-python << END
+    python << END
 import sys
 import psycopg2
-try:
-    psycopg2.connect(
-        dbname="${POSTGRES_DB}",
-        user="${POSTGRES_USER}",
-        password="${POSTGRES_PASSWORD}",
-        host="${PG_HOST}",
-        port="${PG_PORT}",
+import os
 
+try:
+    conn = psycopg2.connect(
+        dbname=os.environ.get("POSTGRES_DB"),
+        user=os.environ.get("POSTGRES_USER"),
+        password=os.environ.get("POSTGRES_PASSWORD"),
+        host=os.environ.get("PG_HOST", "postgres-db"),
+        port=os.environ.get("PG_PORT", "5432")
     )
 except psycopg2.OperationalError:
     sys.exit(-1)
@@ -25,10 +24,17 @@ sys.exit(0)
 END
 }
 
+# Wait until Postgres is available
 until postgres_ready; do
- >&2 echo "Waiting for PostgreSQL to become available....:-("
- sleep 1
+    >&2 echo "Waiting for PostgreSQL to become available..."
+    sleep 2
 done
->&2 echo "PostgreSQL is ready!!!!...:-)"
 
-exec "$@"
+>&2 echo "PostgreSQL is ready! Starting Django..."
+
+# Run migrations before starting the app
+python manage.py migrate --noinput
+python manage.py collectstatic --noinput
+
+# Start Django (Gunicorn)
+exec gunicorn --bind :8000 --workers 2 --worker-class uvicorn.workers.UvicornWorker kaka.asgi:application
