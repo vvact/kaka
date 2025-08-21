@@ -82,7 +82,7 @@ services:
       context: ./docker/local/nginx
       dockerfile: Dockerfile
     ports:
-      - "8080:80"  # Maps host port 8080 to container's port 80
+      - "80:80"  # Maps host port 80 to container's port 80
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/mediafiles

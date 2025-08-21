@@ -1,22 +1,22 @@
 #!/bin/bash
 
 set -o errexit
+
 set -o nounset
 
-# Check if Celery workers are ready
-worker_ready() {
-    celery -A kaka inspect ping > /dev/null 2>&1
+
+worker_ready(){
+    celery -A kaka inspect ping
 }
 
 until worker_ready; do 
-    >&2 echo 'Waiting for Celery workers to become available...'
+    >&2 echo 'Celery workers not available :-('
     sleep 1
+
 done
+>&2 echo 'Celery workers are available and ready!...:-)'
 
->&2 echo 'Celery workers are available and ready! 🚀'
-
-# Start Flower
-exec flower \
+flower \
     --app=kaka \
-    --broker="${CELERY_BROKER:-redis://redis:6379/0}" \
+    --broker="${CELERY_BROKER}" \
     --port=5555
