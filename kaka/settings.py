@@ -182,6 +182,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "https://gentlemanwell.shop",
     "https://ecommerce-frontend-kqou.vercel.app",
 ]
 
