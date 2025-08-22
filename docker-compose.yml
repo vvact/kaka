@@ -103,6 +103,8 @@ services:
     image: nginxproxy/acme-companion
     container_name: nginx-letsencrypt
     restart: unless-stopped
+    environment:
+      - NGINX_PROXY_CONTAINER=nginx-proxy   # 👈 tell it who the proxy is
     volumes:
       - /etc/nginx/certs:/etc/nginx/certs
       - /etc/nginx/vhost.d:/etc/nginx/vhost.d
