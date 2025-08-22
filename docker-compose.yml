@@ -21,12 +21,14 @@ services:
     networks:
       - ecommerce
     restart: unless-stopped
+    environment:
+      - VIRTUAL_HOST=gentlemanwell.shop,www.gentlemanwell.shop
+      - LETSENCRYPT_HOST=gentlemanwell.shop,www.gentlemanwell.shop
+      - LETSENCRYPT_EMAIL=vbm7752@gmail.com
 
   # PostgreSQL Database
   postgres-db:
     image: postgres:13-alpine
-    ports:
-      - "5432:5432"  # optional for local dev
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -44,7 +46,7 @@ services:
       - ecommerce
     restart: unless-stopped
 
-  # Celery Worker for async tasks
+  # Celery Worker
   celery_worker:
     build:
       context: .
@@ -61,7 +63,7 @@ services:
       - ecommerce
     restart: unless-stopped
 
-  # Flower - Monitoring Celery Tasks
+  # Flower
   flower:
     build:
       context: .
@@ -80,45 +82,43 @@ services:
       - ecommerce
     restart: unless-stopped
 
-  # Nginx for serving static/media files and reverse proxy
-  nginx:
-    build:
-      context: ./docker/local/nginx
-      dockerfile: Dockerfile
-    depends_on:
-      - api
+  # 🔹 Replace your old nginx with nginx-proxy
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-proxy
+    restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
     volumes:
-      - static_volume:/app/staticfiles
-      - media_volume:/app/mediafiles
+      - /etc/nginx/certs:/etc/nginx/certs
+      - /etc/nginx/vhost.d:/etc/nginx/vhost.d
+      - /usr/share/nginx/html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
     networks:
       - ecommerce
+
+  # 🔹 Let's Encrypt SSL companion
+  letsencrypt:
+    image: nginxproxy/acme-companion
+    container_name: nginx-letsencrypt
     restart: unless-stopped
+    volumes:
+      - /etc/nginx/certs:/etc/nginx/certs
+      - /etc/nginx/vhost.d:/etc/nginx/vhost.d
+      - /usr/share/nginx/html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - nginx-proxy
+    networks:
+      - ecommerce
 
-  # Optional: React Frontend (Enable when ready)
-  # client:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   container_name: ecommerce_client
-  #   ports:
-  #     - "3000:3000"
-  #   volumes:
-  #     - ./frontend:/app
-  #     - /app/node_modules
-  #   stdin_open: true
-  #   tty: true
-  #   networks:
-  #     - ecommerce
-  #   restart: unless-stopped
-
-# Docker network for internal service communication
+# Networks
 networks:
   ecommerce:
     driver: bridge
 
-# Volumes for persistent and shared data, bound to host directories
+# Volumes
 volumes:
   postgres_data:
     driver: local
