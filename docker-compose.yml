@@ -22,8 +22,8 @@ services:
       - ecommerce
     restart: unless-stopped
     environment:
-      - VIRTUAL_HOST=api.gentlemanwell.shop,www.gentlemanwell.shop
-      - LETSENCRYPT_HOST=api.gentlemanwell.shop,www.gentlemanwell.shop
+      - VIRTUAL_HOST=api.gentlemanwell.shop
+      - LETSENCRYPT_HOST=api.gentlemanwell.shop
       - LETSENCRYPT_EMAIL=vbm7752@gmail.com
 
   # PostgreSQL Database
