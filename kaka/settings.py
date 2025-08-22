@@ -183,7 +183,9 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://gentlemanwell.shop",
-    "https://ecommerce-frontend-kqou.vercel.app",
+    "https://gentlemanwell.shop",
+    "https://www.gentlemanwell.shop",
+    "https://man.frogflyer.xyz",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
