@@ -26,7 +26,8 @@ SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
 
 # ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="127.0.0.1,localhost", cast=Csv())
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "www.gentlemanwell.shop", "gentlemanwell.shop"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "www.gentlemanwell.shop", "gentlemanwell.shop" , 
+"api.gentlemanwell.shop"]
 
 
 
@@ -183,6 +184,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://gentlemanwell.shop",
     "https://www.gentlemanwell.shop",
     "https://man.frogflyer.xyz",
+    "https://api.gentlemanwell.shop"
 ]
 
 
@@ -190,6 +192,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://www.gentlemanwell.shop",
     "https://man.frogflyer.xyz",
+    "https://api.gentlemanwell.shop"
 ]
 CORS_ALLOW_CREDENTIALS = True
 
