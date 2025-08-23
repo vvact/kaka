@@ -94,7 +94,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - /etc/nginx/certs:/etc/nginx/certs
+      - /home/ubuntu/nginx-certs:/etc/nginx/certs
       - /etc/nginx/vhost.d:/etc/nginx/vhost.d
       - /usr/share/nginx/html:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
@@ -109,7 +109,7 @@ services:
     environment:
       - NGINX_PROXY_CONTAINER=nginx-proxy   # 👈 tell it who the proxy is
     volumes:
-      - /etc/nginx/certs:/etc/nginx/certs
+      - /home/ubuntu/nginx-certs:/etc/nginx/certs
       - /etc/nginx/vhost.d:/etc/nginx/vhost.d
       - /usr/share/nginx/html:/usr/share/nginx/html
       - /var/run/docker.sock:/var/run/docker.sock:ro
