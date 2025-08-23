@@ -19,4 +19,6 @@ done
 python -m flower \
     --app=kaka \
     --broker="${CELERY_BROKER}" \
+    --address=0.0.0.0 \
     --port=5555
+
