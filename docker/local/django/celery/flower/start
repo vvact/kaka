@@ -1,7 +1,9 @@
 #!/bin/bash
 
 set -o errexit
+
 set -o nounset
+
 
 worker_ready(){
     celery -A kaka inspect ping
@@ -10,11 +12,10 @@ worker_ready(){
 until worker_ready; do 
     >&2 echo 'Celery workers not available :-('
     sleep 1
-done
 
+done
 >&2 echo 'Celery workers are available and ready!...:-)'
 
-python -m flower \
+flower \
     --app=kaka \
-    --broker="${CELERY_BROKER}" \
-    --bind=0.0.0.0:5555
+    --broker="${CELERY_BROKER}"
