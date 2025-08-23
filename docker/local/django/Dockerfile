@@ -32,6 +32,7 @@ RUN apt-get update && \
 COPY ./requirements.txt .
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir flower
 
 # Copy and fix entrypoint/start scripts
 COPY ./docker/local/django/entrypoint /entrypoint
