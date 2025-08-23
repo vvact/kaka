@@ -23,6 +23,7 @@ services:
     restart: unless-stopped
     environment:
       - VIRTUAL_HOST=api.gentlemanwell.shop
+      - VIRTUAL_PORT=8000
       - LETSENCRYPT_HOST=api.gentlemanwell.shop
       - LETSENCRYPT_EMAIL=vbm7752@gmail.com
 
