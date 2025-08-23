@@ -73,6 +73,8 @@ services:
       - .:/app
     env_file:
       - .env
+    environment:
+      - CELERY_BROKER=redis://redis:6379/0
     ports:
       - "5557:5555"
     depends_on:
