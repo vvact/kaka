@@ -16,7 +16,7 @@ until worker_ready; do
 done
 >&2 echo 'Celery workers are available and ready!...:-)'
 
-start-flower \
+python -m flower \
     --app=kaka \
     --broker="${CELERY_BROKER}" \
     --port=5555
