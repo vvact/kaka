@@ -1,10 +1,9 @@
 #!/bin/bash
 
 set -o errexit
-
 set -o nounset
 
-
+# Wait until Celery workers are ready
 worker_ready(){
     celery -A kaka inspect ping
 }
@@ -12,13 +11,14 @@ worker_ready(){
 until worker_ready; do 
     >&2 echo 'Celery workers not available :-('
     sleep 1
-
 done
+
 >&2 echo 'Celery workers are available and ready!...:-)'
 
-python -m flower \
-    --app=kaka \
-    --broker="${CELERY_BROKER}" \
-    --address=0.0.0.0 \
-    --port=5555
+# Set Flower environment variables
+export CELERY_BROKER_URL="${CELERY_BROKER}"
+export FLOWER_PORT=5555
+export FLOWER_ADDRESS=0.0.0.0
 
+# Start Flower
+python -m flower --broker="$CELERY_BROKER_URL" --port="$FLOWER_PORT" --address="$FLOWER_ADDRESS"
