@@ -87,32 +87,35 @@ services:
 
   # 🔹 Nginx reverse proxy
   nginx-proxy:
-    image: jwilder/nginx-proxy
+    image: nginxproxy/nginx-proxy:latest
     container_name: nginx-proxy
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - nginx_certs:/etc/nginx/certs
-      - nginx_vhost:/etc/nginx/vhost.d
-      - nginx_html:/usr/share/nginx/html
+      - /home/ubuntu/certs:/etc/nginx/certs:rw
+      - /home/ubuntu/vhost.d:/etc/nginx/vhost.d
+      - /home/ubuntu/html:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
     networks:
       - ecommerce
 
   # 🔹 Let's Encrypt SSL companion
   letsencrypt:
-    image: nginxproxy/acme-companion
+    image: nginxproxy/acme-companion:latest
     container_name: nginx-letsencrypt
     restart: unless-stopped
     environment:
       - NGINX_PROXY_CONTAINER=nginx-proxy
     volumes:
-      - nginx_certs:/etc/nginx/certs
-      - nginx_vhost:/etc/nginx/vhost.d
-      - nginx_html:/usr/share/nginx/html
+      - /home/ubuntu/certs:/etc/nginx/certs:rw
+      - /home/ubuntu/vhost.d:/etc/nginx/vhost.d
+      - /home/ubuntu/html:/usr/share/nginx/html
       - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    environment:
+      - DEFAULT_EMAIL=vbm7752@gmail.com
     depends_on:
       - nginx-proxy
     networks:
@@ -146,12 +149,4 @@ volumes:
       device: /home/ubuntu/mediafiles
       o: bind
 
-  nginx_certs:
-  nginx_vhost:
-    driver: local
-    driver_opts:
-      type: none
-      device: /home/ubuntu/vhost.d
-      o: bind
-
-  nginx_html:
+ 
