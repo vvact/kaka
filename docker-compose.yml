@@ -151,9 +151,9 @@ volumes:
       device: /home/ubuntu/mediafiles
       o: bind
 
-    acme_data:
-      driver: local
-      driver_opts:
-        type: none
-        device: /home/ubuntu/acme_data
-        o: bind
+  acme_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/ubuntu/acme_data
+      o: bind
