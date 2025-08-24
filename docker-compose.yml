@@ -40,7 +40,7 @@ services:
       - ecommerce
     restart: unless-stopped
 
-  # Redis for Celery and caching
+  # Redis
   redis:
     image: redis:5-alpine
     networks:
@@ -85,7 +85,7 @@ services:
       - ecommerce
     restart: unless-stopped
 
-  # 🔹 Replace your old nginx with nginx-proxy
+  # 🔹 Nginx reverse proxy
   nginx-proxy:
     image: jwilder/nginx-proxy
     container_name: nginx-proxy
@@ -94,9 +94,9 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - /home/ubuntu/nginx-certs:/etc/nginx/certs
-      - /etc/nginx/vhost.d:/etc/nginx/vhost.d
-      - /usr/share/nginx/html:/usr/share/nginx/html
+      - nginx_certs:/etc/nginx/certs
+      - nginx_vhost:/etc/nginx/vhost.d
+      - nginx_html:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
     networks:
       - ecommerce
@@ -107,11 +107,11 @@ services:
     container_name: nginx-letsencrypt
     restart: unless-stopped
     environment:
-      - NGINX_PROXY_CONTAINER=nginx-proxy   # 👈 tell it who the proxy is
+      - NGINX_PROXY_CONTAINER=nginx-proxy
     volumes:
-      - /home/ubuntu/nginx-certs:/etc/nginx/certs
-      - /etc/nginx/vhost.d:/etc/nginx/vhost.d
-      - /usr/share/nginx/html:/usr/share/nginx/html
+      - nginx_certs:/etc/nginx/certs
+      - nginx_vhost:/etc/nginx/vhost.d
+      - nginx_html:/usr/share/nginx/html
       - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
       - nginx-proxy
@@ -145,3 +145,13 @@ volumes:
       type: none
       device: /home/ubuntu/mediafiles
       o: bind
+
+  nginx_certs:
+  nginx_vhost:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/ubuntu/vhost.d
+      o: bind
+
+  nginx_html:
