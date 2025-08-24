@@ -114,8 +114,7 @@ services:
       - /home/ubuntu/html:/usr/share/nginx/html
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
-    environment:
-      - DEFAULT_EMAIL=vbm7752@gmail.com
+  
     depends_on:
       - nginx-proxy
     networks:
