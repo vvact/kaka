@@ -8,28 +8,29 @@ services:
       dockerfile: ./docker/local/django/Dockerfile
     command: /start
     volumes:
-      - .:/app
-      - static_volume:/app/staticfiles
-      - media_volume:/app/mediafiles
+      - static_volume:/app/staticfiles  # Removed development mount
+      - media_volume:/app/mediafiles    # Removed development mount
     expose:
       - "8000"
     env_file:
       - .env
     depends_on:
-      - postgres-db
-      - redis
+      postgres-db:
+        condition: service_healthy  # Health check dependency
+      redis:
+        condition: service_started
     networks:
       - ecommerce
     restart: unless-stopped
     environment:
       - VIRTUAL_HOST=api.gentlemanwell.shop
       - VIRTUAL_PORT=8000
+      - VIRTUAL_PROTO=http
       - LETSENCRYPT_HOST=api.gentlemanwell.shop
       - LETSENCRYPT_EMAIL=vbm7752@gmail.com
-      # Django large upload limits
-      - DATA_UPLOAD_MAX_MEMORY_SIZE=209715200  # 200 MB
-      - FILE_UPLOAD_MAX_MEMORY_SIZE=209715200  # 200 MB
-      - NGINX_CLIENT_MAX_BODY_SIZE=200M
+      - CLIENT_MAX_BODY_SIZE=200M
+      - DATA_UPLOAD_MAX_MEMORY_SIZE=209715200
+      - FILE_UPLOAD_MAX_MEMORY_SIZE=209715200
 
   # PostgreSQL Database
   postgres-db:
@@ -38,18 +39,33 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_HOST_AUTH_METHOD=md5
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - ecommerce
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
 
   # Redis
   redis:
-    image: redis:5-alpine
+    image: redis:7-alpine
+    command: redis-server --appendonly yes  
+    volumes:
+      - redis_data:/data 
     networks:
       - ecommerce
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   # Celery Worker
   celery_worker:
@@ -57,16 +73,17 @@ services:
       context: .
       dockerfile: ./docker/local/django/Dockerfile
     command: /start-celeryworker
-    volumes:
-      - .:/app
     env_file:
       - .env
     depends_on:
-      - redis
-      - postgres-db
+      redis:
+        condition: service_healthy
+      postgres-db:
+        condition: service_healthy
     networks:
       - ecommerce
     restart: unless-stopped
+   
 
   # Flower
   flower:
@@ -74,12 +91,11 @@ services:
       context: .
       dockerfile: ./docker/local/django/Dockerfile
     command: /start-flower
-    volumes:
-      - .:/app
     env_file:
       - .env
     environment:
       - CELERY_BROKER=redis://redis:6379/0
+      - FLOWER_BASIC_AUTH=${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-password}  # Security
     ports:
       - "5557:5555"
     depends_on:
@@ -99,42 +115,46 @@ services:
       - "443:443"
     environment:
       - DEFAULT_HOST=api.gentlemanwell.shop
-      - NGINX_CLIENT_MAX_BODY_SIZE=200M
-      - CLIENT_MAX_BODY_SIZE=200M
     volumes:
       - /home/ubuntu/certs:/etc/nginx/certs:rw
       - /home/ubuntu/vhost.d:/etc/nginx/vhost.d
       - /home/ubuntu/html:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/mediafiles:ro
     networks:
       - ecommerce
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-  # # 🔹 Let's Encrypt SSL companion
-  # letsencrypt:
-  #   image: nginxproxy/acme-companion:latest
-  #   container_name: nginx-letsencrypt
-  #   restart: unless-stopped
-  #   environment:
-  #     - NGINX_PROXY_CONTAINER=nginx-proxy
-  #     - ACME_CA_URI=https://acme-v02.api.letsencrypt.org/directory
-  #   volumes:
-  #     - /home/ubuntu/certs:/etc/nginx/certs:rw
-  #     - /home/ubuntu/vhost.d:/etc/nginx/vhost.d
-  #     - /home/ubuntu/html:/usr/share/nginx/html
-  #     - /var/run/docker.sock:/var/run/docker.sock:ro
-  #     - acme_data:/etc/acme.sh
-
-
-  
-  #   depends_on:
-  #     - nginx-proxy
-  #   networks:
-  #     - ecommerce
+  # 🔹 Let's Encrypt SSL companion
+  letsencrypt:
+    image: nginxproxy/acme-companion:latest
+    container_name: nginx-letsencrypt
+    restart: unless-stopped
+    environment:
+      - NGINX_PROXY_CONTAINER=nginx-proxy
+      - DEFAULT_EMAIL=vbm7752@gmail.com
+    volumes:
+      - /home/ubuntu/certs:/etc/nginx/certs:rw
+      - /home/ubuntu/vhost.d:/etc/nginx/vhost.d
+      - /home/ubuntu/html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - nginx-proxy
+    networks:
+      - ecommerce
 
 # Networks
 networks:
   ecommerce:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16  # Fixed subnet for stability
 
 # Volumes
 volumes:
@@ -143,6 +163,13 @@ volumes:
     driver_opts:
       type: none
       device: /home/ubuntu/postgres_data
+      o: bind
+
+  redis_data:  # Added for Redis persistence
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/ubuntu/redis_data
       o: bind
 
   static_volume:

@@ -1,21 +1,54 @@
 #!/bin/bash
 
 set -o errexit
-
 set -o nounset
+set -o pipefail
 
-
-worker_ready(){
-    celery -A kaka inspect ping
+# Logging function for consistency
+log() {
+    echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
 }
 
-until worker_ready; do 
-    >&2 echo 'Celery workers not available :-('
-    sleep 1
+# Function to check if a worker is available
+worker_ready() {
+    # Use 'celery inspect ping' and try to get a response from at least one worker.
+    # The `-t 5` gives a 5-second timeout so the command doesn't hang forever.
+    if celery -A kaka inspect ping -t 5 | grep -q "pong"; then
+        return 0
+    else
+        return 1
+    fi
+}
 
+log "Waiting for Celery workers to become available..."
+
+# Wait for workers with a maximum number of attempts to avoid infinite loops.
+MAX_ATTEMPTS=30
+ATTEMPT=0
+
+until worker_ready; do
+    ATTEMPT=$((ATTEMPT + 1))
+    if [ $ATTEMPT -gt $MAX_ATTEMPTS ]; then
+        log "ERROR: Celery workers failed to become available after $MAX_ATTEMPTS attempts. Giving up."
+        exit 1
+    fi
+    log "Attempt $ATTEMPT/$MAX_ATTEMPTS: Celery workers not available. Retrying..."
+    sleep 2
 done
->&2 echo 'Celery workers are available and ready!...:-)'
 
-flower \
-    --app=kaka \
-    --broker="${CELERY_BROKER}"
+log "SUCCESS: Celery workers are available!"
+
+# Now, check if we can connect to the broker by checking the status.
+# This is a good sanity check before starting Flower.
+log "Checking connection to broker..."
+if celery -A kaka status 2>&1 | grep -q 'ERROR'; then
+    log "ERROR: Could not connect to the broker. Please check CELERY_BROKER_URL."
+    celery -A kaka status # Run it again to show the actual error
+    exit 1
+fi
+
+log "Starting Flower..."
+
+# Execute the Flower command, passing through any command-line arguments.
+# Using exec replaces the shell process with Flower, ensuring it gets PID 1 and signal handling.
+exec flower --app=kaka --broker="${CELERY_BROKER_URL}" "$@"
