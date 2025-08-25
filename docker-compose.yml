@@ -29,6 +29,7 @@ services:
       # Django large upload limits
       - DATA_UPLOAD_MAX_MEMORY_SIZE=209715200  # 200 MB
       - FILE_UPLOAD_MAX_MEMORY_SIZE=209715200  # 200 MB
+      - NGINX_CLIENT_MAX_BODY_SIZE=200M
 
   # PostgreSQL Database
   postgres-db:
@@ -98,7 +99,8 @@ services:
       - "443:443"
     environment:
       - DEFAULT_HOST=api.gentlemanwell.shop
-      - NGINX_CLIENT_MAX_BODY_SIZE=200m
+      - NGINX_CLIENT_MAX_BODY_SIZE=200M
+      - CLIENT_MAX_BODY_SIZE=200M
     volumes:
       - /home/ubuntu/certs:/etc/nginx/certs:rw
       - /home/ubuntu/vhost.d:/etc/nginx/vhost.d
