@@ -214,3 +214,8 @@ CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 
 
+DATA_UPLOAD_MAX_MEMORY_SIZE = 209715200  # 200 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 209715200  # 200 MB
+
+
+
