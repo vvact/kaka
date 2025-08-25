@@ -1,6 +1,6 @@
 #!/bin/bash
-# Navigate to project directory
-cd /kaka || exit
+# Navigate to the script's directory
+cd "$(dirname "$0")" || exit
 
 # Pull latest code from GitHub
 git reset --hard
