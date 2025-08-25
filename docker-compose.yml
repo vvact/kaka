@@ -26,6 +26,9 @@ services:
       - VIRTUAL_PORT=8000
       - LETSENCRYPT_HOST=api.gentlemanwell.shop
       - LETSENCRYPT_EMAIL=vbm7752@gmail.com
+      # Django large upload limits
+      - DATA_UPLOAD_MAX_MEMORY_SIZE=209715200  # 200 MB
+      - FILE_UPLOAD_MAX_MEMORY_SIZE=209715200  # 200 MB
 
   # PostgreSQL Database
   postgres-db:
