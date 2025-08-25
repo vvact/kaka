@@ -1,8 +1,9 @@
 # moments/models.py
 from django.db import models
+from cloudinary.models import CloudinaryField
 
 class Moment(models.Model):
-    image = models.ImageField(upload_to="moments/")
+    image = CloudinaryField('image', folder='moments/')
     caption = models.CharField(max_length=255, blank=True)  # small caption
     link = models.URLField(blank=True, null=True, help_text="Permalink to Instagram or external page")
     is_featured = models.BooleanField(default=False)
