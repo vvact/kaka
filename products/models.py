@@ -36,6 +36,7 @@ class AttributeValue(models.Model):
     attribute = models.ForeignKey(Attribute, related_name="values", on_delete=models.CASCADE)
     name = models.CharField(max_length=100, db_index=True)
     hex_code = models.CharField(max_length=7, blank=True, null=True)  # Optional for colors
+    image = CloudinaryField('image', folder='attribute_values', blank=True, null=True)
     slug = models.SlugField(unique=True, db_index=True)
 
     class Meta:
