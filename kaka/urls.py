@@ -4,16 +4,21 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-
+# Root endpoint
 def root_view(request):
     return JsonResponse({"message": "Welcome to GentlemanWell API"})
+
+# Health endpoint
+def health(request):
+    return JsonResponse({"status": "ok"})
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', root_view),
-    path('api/', include('products.urls')),  # or whatever your app is called
-    path('api/', include('cart.urls')),  # Include cart URLs
-    path('api/', include('moments.urls')),  # Include moments URLs
+    path('health/', health, name='health'),  # Healthcheck at root
+    path('api/', include('products.urls')),
+    path('api/', include('cart.urls')),
+    path('api/', include('moments.urls')),
 ]
 
 if settings.DEBUG:
