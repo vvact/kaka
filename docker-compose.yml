@@ -91,7 +91,7 @@ services:
       - ecommerce
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "celery -A kaka inspect ping -t 5 | grep pong || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -120,7 +120,7 @@ services:
       - ecommerce
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5555"]
+      test: ["CMD-SHELL", "curl -f http://localhost:5555 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
