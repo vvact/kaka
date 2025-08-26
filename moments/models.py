@@ -7,7 +7,6 @@ class Moment(models.Model):
     caption = models.CharField(max_length=255, blank=True)  # small caption
     link = models.URLField(blank=True, null=True, help_text="Permalink to Instagram or external page")
     is_featured = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
