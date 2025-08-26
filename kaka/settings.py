@@ -107,25 +107,25 @@ WSGI_APPLICATION = "kaka.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': dj_database_url.config(
-#         default=os.getenv("DATABASE_URL", "sqlite:///db.sqlite3"),
-#         conn_max_age=600,
-#         ssl_require=False
-#     )
-# }
-
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get("POSTGRES_DB", "ecommerce_db"),
-        'USER': os.environ.get("POSTGRES_USER", "manwell"),
-        'PASSWORD': os.environ.get("POSTGRES_PASSWORD", "buda123"),
-        'HOST': os.environ.get("POSTGRES_HOST", "postgres-db"),
-        'PORT': os.environ.get("POSTGRES_PORT", "5432"),
-    }
+    'default': dj_database_url.config(
+        default=os.getenv("DATABASE_URL", "sqlite:///db.sqlite3"),
+        conn_max_age=600,
+        ssl_require=False
+    )
 }
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.environ.get("POSTGRES_DB", "ecommerce_db"),
+#         'USER': os.environ.get("POSTGRES_USER", "manwell"),
+#         'PASSWORD': os.environ.get("POSTGRES_PASSWORD", "buda123"),
+#         'HOST': os.environ.get("POSTGRES_HOST", "postgres-db"),
+#         'PORT': os.environ.get("POSTGRES_PORT", "5432"),
+#     }
+# }
 
 
 
