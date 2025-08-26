@@ -25,3 +25,11 @@ class MomentListAPIView(generics.ListAPIView):
             elif featured.lower() == 'false':
                 queryset = queryset.filter(is_featured=False)
         return queryset
+
+
+
+# app/views.py
+from django.http import JsonResponse
+
+def health(request):
+    return JsonResponse({"status": "ok"})
