@@ -1,9 +1,7 @@
 #!/bin/bash
-
 set -o errexit
 set -o nounset
+set -o pipefail
 
-watchmedo auto-restart \
-  -d kaka/ \
-  -p "*.py" \
-  -- celery -A kaka worker --loglevel=info
+echo "Starting Celery worker..."
+exec celery -A kaka worker --loglevel=info

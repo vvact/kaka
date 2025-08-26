@@ -1,4 +1,3 @@
-version: "3.8"
 
 services:
   # Django API Service
@@ -106,7 +105,7 @@ services:
     env_file:
       - .env
     environment:
-      - CELERY_BROKER=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
       - FLOWER_BASIC_AUTH=${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-password}
     ports:
       - "5557:5555"
