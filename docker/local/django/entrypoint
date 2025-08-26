@@ -1,10 +1,14 @@
 #!/bin/bash
-
 set -o errexit
-
 set -o pipefail
-
 set -o nounset
+
+# Default fallback values (optional)
+: "${POSTGRES_DB:?POSTGRES_DB is not set}"
+: "${POSTGRES_USER:?POSTGRES_USER is not set}"
+: "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is not set}"
+: "${PG_HOST:?PG_HOST is not set}"
+: "${PG_PORT:?PG_PORT is not set}"
 
 postgres_ready() {
 python << END
@@ -16,8 +20,7 @@ try:
         user="${POSTGRES_USER}",
         password="${POSTGRES_PASSWORD}",
         host="${PG_HOST}",
-        port="${PG_PORT}",
-
+        port="${PG_PORT}"
     )
 except psycopg2.OperationalError:
     sys.exit(-1)
