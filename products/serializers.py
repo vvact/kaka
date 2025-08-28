@@ -31,9 +31,20 @@ class AttributeSerializer(serializers.ModelSerializer):
 
 # --- VARIANTS ---
 class VariantImageSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = VariantImage
         fields = ["image", "alt_text"]
+
+    def get_image(self, obj):
+        request = self.context.get("request")
+        if obj.image:
+            url = obj.image.url
+            if request:
+                return request.build_absolute_uri(url)
+            return url
+        return None
 
 
 class VariantSerializer(serializers.ModelSerializer):
@@ -57,9 +68,19 @@ class VariantSerializer(serializers.ModelSerializer):
 
 # --- PRODUCT IMAGES ---
 class ProductImageSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
     class Meta:
         model = ProductImage
         fields = ["image", "alt_text", "is_featured"]
+
+    def get_image(self, obj):
+        request = self.context.get("request")
+        if obj.image:
+            url = obj.image.url
+            if request:
+                return request.build_absolute_uri(url)
+            return url
+        return None
 
 
 # --- PRODUCTS ---
@@ -69,7 +90,6 @@ class ProductSerializer(serializers.ModelSerializer):
     variants = serializers.SerializerMethodField()
     category = CategorySerializer(read_only=True)
     final_price = serializers.DecimalField(max_digits=12, decimal_places=2, source="get_final_price", read_only=True)
-    is_new_arrival = serializers.SerializerMethodField()
 
     min_price = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
     max_price = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
@@ -82,8 +102,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "meta_title", "meta_description",
             "base_price", "discount_price",  "min_price", "max_price", "final_price",
             "stock", "has_variants", "is_featured", "is_active",
-            "category", "images", "options", "variants",
-            "is_new_arrival", "price",
+            "category", "images", "options", "variants", "price",
         ]
 
     def get_price(self, obj):
@@ -94,8 +113,6 @@ class ProductSerializer(serializers.ModelSerializer):
             return str(obj.min_price)  # single price
         return f"{obj.min_price} - {obj.max_price}"  # price range
 
-    def get_is_new_arrival(self, obj):
-        return obj.is_new_arrival()
 
     def get_options(self, obj):
         if not obj.has_variants:

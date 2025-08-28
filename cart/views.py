@@ -27,7 +27,7 @@ class CartViewSet(viewsets.ViewSet):
         item = add_item_to_cart(cart, product, quantity, variant)
 
         cart.refresh_totals()  # recalc totals
-        return Response({"success": True, "item_id": item.id, "cart_total": str(cart.get_total())})
+        return Response({"success": True, "item_id": item.id, "cart_total": str(cart.total_price())})
 
     @action(detail=False, methods=["post"])
     def remove_item(self, request):
@@ -40,7 +40,7 @@ class CartViewSet(viewsets.ViewSet):
         remove_item_from_cart(cart, product, variant)
 
         cart.refresh_totals()  # recalc totals
-        return Response({"success": True, "cart_total": str(cart.get_total())})
+        return Response({"success": True, "cart_total": str(cart.total_price())})
 
     @action(detail=False, methods=["post"])
     def update_item(self, request):
@@ -71,7 +71,7 @@ class CartViewSet(viewsets.ViewSet):
                 "product_id": item.product.id,
                 "variant_id": item.variant.id if item.variant else None,
                 "quantity": item.quantity,
-                "price": str(item.get_price())
+                "price": str(item.final_price())  # use final_price() from CartItem
             },
-            "cart_total": str(cart.get_total())
+            "cart_total": str(cart.total_price())
         })

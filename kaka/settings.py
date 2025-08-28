@@ -1,3 +1,4 @@
+from datetime import timedelta
 import os
 from pathlib import Path
 from decouple import config, Csv
@@ -41,8 +42,17 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "whitenoise.runserver_nostatic",
+    'rest_framework_simplejwt.token_blacklist',
 
+    'django.contrib.sites',
+
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
     
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
     
     "cloudinary",
     "cloudinary_storage",
@@ -57,7 +67,28 @@ INSTALLED_APPS = [
     'moments',
 ]
 
+SITE_ID = 1
 
+REST_USE_JWT = True 
+SOCIALACCOUNT_AUTO_SIGNUP = True
+
+# Email-only authentication (modern allauth)
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None        # no username field
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']  # required fields for signup
+ACCOUNT_LOGIN_METHODS = {'email'}              # login with email only
+
+# Google provider
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': os.environ.get('GOOGLE_OAUTH_CLIENT_ID'),
+            'secret': os.environ.get('GOOGLE_OAUTH_CLIENT_SECRET'),
+            'key': ''
+        },
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {'access_type': 'online'}
+    }
+}
 
 
 # Optional: Limit formats, transformations, etc.
@@ -81,6 +112,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Add this line for django-allauth
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = "kaka.urls"
@@ -128,7 +161,7 @@ DATABASES = {
 # }
 
 
-
+AUTH_USER_MODEL = "accounts.User"
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
@@ -166,6 +199,7 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
@@ -175,12 +209,44 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-AUTH_USER_MODEL = "accounts.User"
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+
+# Simple JWT config - rotation + blacklist ON
+SIMPLE_JWT = {
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': os.environ.get('JWT_SIGNING_KEY', 'change-me-in-prod'),  # use env var
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=240),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+    # optionally tighten JTI & token claims
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+}
+
+
+# ------------------ SESSION ------------------
+SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
+SESSION_COOKIE_NAME = "ecomerec_session"
+SESSION_COOKIE_AGE = 7 * 24 * 60 * 60
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = False  # True in production with HTTPS
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SECURE = False
+
 
 # Trusted origins for CSRF POST requests
 CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",  # your Next.js frontend
+    "https://localhost:3000", # if you use https locally
     "https://gentlemanwell.shop",
     "https://www.gentlemanwell.shop",
     "https://man.frogflyer.xyz",
@@ -196,26 +262,31 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOW_ALL_ORIGINS = True
+
+# ------------------ REDIS / CACHE ------------------
+# REDIS_URL = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/1")
+
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": REDIS_URL,
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#         }
+#     }
+# }
 
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": config("REDIS_URL"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    }
-}
-
-
-CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
-CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+# ------------------ CELERY ------------------
+CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/0")
 
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 209715200  # 200 MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 209715200  # 200 MB
+
+
+
 
 
 

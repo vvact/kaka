@@ -42,8 +42,13 @@ def merge_guest_cart_to_user(user, session_key):
                 cart_item.save(update_fields=["quantity"])
         guest_cart.delete()
 
-def add_item_to_cart(cart, product: Product, quantity=1, variant: Variant = None, override_quantity=False):
-    """Add a product/variant to cart. Override or increment quantity."""
+def add_item_to_cart(cart, product, quantity=1, variant=None, override_quantity=False):
+    # Stock validation
+    if variant and quantity > variant.stock:
+        raise ValueError(f"Only {variant.stock} units available for {variant.sku}")
+    if not variant and quantity > product.stock:
+        raise ValueError(f"Only {product.stock} units available for {product.name}")
+
     with transaction.atomic():
         item, created = CartItem.objects.select_for_update().get_or_create(
             cart=cart, product=product, variant=variant,
@@ -51,8 +56,16 @@ def add_item_to_cart(cart, product: Product, quantity=1, variant: Variant = None
         )
         if not created:
             if override_quantity:
+                if variant and quantity > variant.stock:
+                    raise ValueError(f"Cannot set quantity above stock ({variant.stock})")
+                if not variant and quantity > product.stock:
+                    raise ValueError(f"Cannot set quantity above stock ({product.stock})")
                 item.quantity = quantity
             else:
+                if variant and item.quantity + quantity > variant.stock:
+                    raise ValueError(f"Cannot exceed stock ({variant.stock})")
+                if not variant and item.quantity + quantity > product.stock:
+                    raise ValueError(f"Cannot exceed stock ({product.stock})")
                 item.quantity += quantity
             item.save(update_fields=["quantity"])
     return item
@@ -60,3 +73,13 @@ def add_item_to_cart(cart, product: Product, quantity=1, variant: Variant = None
 def remove_item_from_cart(cart, product: Product, variant: Variant = None):
     """Remove a product/variant from cart."""
     CartItem.objects.filter(cart=cart, product=product, variant=variant).delete()
+
+
+
+from django.utils import timezone
+from .models import Cart
+
+def cleanup_expired_carts():
+    """Delete expired guest carts"""
+    Cart.objects.filter(user__isnull=True, expires_at__lt=timezone.now()).delete()
+

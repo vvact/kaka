@@ -1,4 +1,3 @@
-# cart/models.py
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -6,12 +5,14 @@ from decimal import Decimal
 
 User = get_user_model()
 
+
 class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     session_key = models.CharField(max_length=40, null=True, blank=True, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     expires_at = models.DateTimeField(null=True, blank=True)
+    total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
 
     def is_expired(self):
         return self.expires_at and self.expires_at < timezone.now()
@@ -22,14 +23,17 @@ class Cart(models.Model):
         self.save(update_fields=["expires_at"])
 
     def total_price(self):
-        """Calculate total price of cart"""
+        """Return cached total or calculate if missing"""
+        if hasattr(self, 'total') and self.total > 0:
+            return self.total
         return sum([item.final_price() for item in self.items.all()]) or Decimal("0.00")
 
     def refresh_totals(self):
-        """Call after any item addition/removal to refresh totals"""
-        # Optional: could cache total in DB field for performance
+        """Recalculate and cache total price"""
+        self.total = sum([item.final_price() for item in self.items.all()]) or Decimal("0.00")
         self.updated_at = timezone.now()
-        self.save(update_fields=["updated_at"])
+        self.save(update_fields=["total", "updated_at"])
+
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")

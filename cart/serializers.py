@@ -18,7 +18,7 @@ class CartItemSerializer(serializers.ModelSerializer):
 
     def get_variant_attributes(self, obj):
         if obj.variant:
-            return {attr.attribute.name: attr.value for attr in obj.variant.attributes.all()}
+            return {attr.attribute.name: attr.name for attr in obj.variant.attributes.all()}
         return None
 
     def get_final_price(self, obj):
