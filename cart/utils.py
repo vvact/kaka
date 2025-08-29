@@ -54,8 +54,20 @@ def validate_stock(product, variant=None, quantity=1):
         raise ValueError(f"Only {stock} units available for {variant.sku if variant else product.name}")
 
 
-def add_item_to_cart(cart, product, quantity=1, variant=None, override_quantity=False):
-    """Add or update a cart item, handling both base and variant products."""
+def add_item_to_cart(cart, product, quantity=1, variant=None, variant_id=None, override_quantity=False):
+    """
+    Add or update a cart item, handling both base and variant products.
+    - You can pass either `variant` (object) or `variant_id`.
+    - If override_quantity=True, sets quantity to the given amount.
+    - If False, increments existing quantity.
+    """
+    # If variant_id is provided, fetch the Variant object
+    if variant_id and not variant:
+        try:
+            variant = Variant.objects.get(id=variant_id, product=product)
+        except Variant.DoesNotExist:
+            raise ValueError("Invalid variant_id for this product")
+
     validate_stock(product, variant, quantity)
 
     with transaction.atomic():
@@ -77,8 +89,14 @@ def add_item_to_cart(cart, product, quantity=1, variant=None, override_quantity=
     return item
 
 
-def remove_item_from_cart(cart, product, variant=None):
-    """Remove a product/variant from cart and refresh totals."""
+def remove_item_from_cart(cart, product, variant=None, variant_id=None):
+    """
+    Remove a product/variant from cart.
+    Works correctly whether the item has a variant or not.
+    """
+    if variant_id and not variant:
+        variant = Variant.objects.filter(id=variant_id, product=product).first()
+
     CartItem.objects.filter(cart=cart, product=product, variant=variant).delete()
     cart.refresh_totals()
 

@@ -2,7 +2,9 @@
 from rest_framework import serializers
 from .models import Cart, CartItem
 
+
 class CartItemSerializer(serializers.ModelSerializer):
+    item_id = serializers.IntegerField(source="id", read_only=True)  # 👈 expose item_id
     product_name = serializers.CharField(source="product.name", read_only=True)
     product_slug = serializers.SlugField(source="product.slug", read_only=True)
     product_image = serializers.SerializerMethodField()
@@ -13,7 +15,7 @@ class CartItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = CartItem
         fields = [
-            "id",
+            "item_id",        # 👈 use item_id instead of raw id
             "product",
             "product_name",
             "product_slug",
@@ -22,8 +24,8 @@ class CartItemSerializer(serializers.ModelSerializer):
             "quantity",
             "line_total",
             "max_quantity",
-            
         ]
+
     def get_max_quantity(self, obj):
         # if variant exists, use variant stock; else use product stock
         return obj.variant.stock if obj.variant else obj.product.stock
@@ -52,7 +54,6 @@ class CartItemSerializer(serializers.ModelSerializer):
 
     def get_line_total(self, obj):
         return self.get_unit_price(obj) * obj.quantity
-
 
 
 class CartSerializer(serializers.ModelSerializer):
