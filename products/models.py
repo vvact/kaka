@@ -3,12 +3,18 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 from cloudinary.models import CloudinaryField
+from .utils import generate_unique_slug, generate_sku
 
 class Category(models.Model):
     name = models.CharField(max_length=255, db_index=True)
     slug = models.SlugField(unique=True, db_index=True)
     image = CloudinaryField('image', folder='categories', blank=True, null=True)
     is_active = models.BooleanField(default=True, db_index=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = generate_unique_slug(Category, self.name)
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name_plural = "Categories"
@@ -24,6 +30,11 @@ class Attribute(models.Model):
     position = models.PositiveIntegerField(default=0, db_index=True)
     slug = models.SlugField(unique=True, db_index=True)
 
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = generate_unique_slug(Attribute, self.name)
+        super().save(*args, **kwargs)
+
     class Meta:
         ordering = ["position", "name"]
 
@@ -35,9 +46,14 @@ class AttributeValue(models.Model):
     """E.g., Red, Blue, Large, Cotton."""
     attribute = models.ForeignKey(Attribute, related_name="values", on_delete=models.CASCADE)
     name = models.CharField(max_length=100, db_index=True)
-    hex_code = models.CharField(max_length=7, blank=True, null=True)  # Optional for colors
+    hex_code = models.CharField(max_length=7, blank=True, null=True)
     image = CloudinaryField('image', folder='attribute_values', blank=True, null=True)
     slug = models.SlugField(unique=True, db_index=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = generate_unique_slug(AttributeValue, self.name)
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ["attribute__position", "attribute__name", "name"]
@@ -49,7 +65,7 @@ class AttributeValue(models.Model):
 
 class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="products", db_index=True)
-    name = models.CharField(max_length=255, db_index=True)
+    name = models.CharField(blank=True,max_length=100, db_index=True)
     slug = models.SlugField(unique=True, db_index=True)
     description = models.TextField(blank=True)
 
@@ -64,6 +80,11 @@ class Product(models.Model):
     is_featured = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = generate_unique_slug(Product, self.name)
+        super().save(*args, **kwargs)
 
     def get_final_price(self):
         return self.discount_price if self.discount_price else self.base_price
@@ -87,6 +108,11 @@ class Variant(models.Model):
     is_active = models.BooleanField(default=True, db_index=True)
 
     attributes = models.ManyToManyField(AttributeValue, related_name="variants", blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.sku:
+            self.sku = generate_sku(self.product)
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name_plural = "Variants"

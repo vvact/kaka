@@ -23,6 +23,6 @@ urlpatterns = [
     # Google social login
     path("google/", GoogleLogin.as_view(), name="google_login"),
 
-    # Optional: include default allauth URLs if needed for other social flows
+    # Optional: include default allauth URLs (only if you need other social providers)
     path("social/", include("allauth.socialaccount.urls")),
 ]

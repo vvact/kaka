@@ -6,6 +6,12 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.conf import settings
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client
+from dj_rest_auth.registration.views import SocialLoginView
+
+from datetime import timedelta
 
 from .serializers import (
     UserSerializer,
@@ -13,12 +19,19 @@ from .serializers import (
     RegisterSerializer,
     CustomTokenObtainPairSerializer,
 )
-from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
-from dj_rest_auth.registration.views import SocialLoginView
 
-from datetime import timedelta
+
 
 User = get_user_model()
+
+
+# ------------------------------
+# Custom Google OAuth2 Client
+# ------------------------------
+class GoogleOAuth2Client(OAuth2Client):
+    @property
+    def scope_delimiter(self):
+        return ' '
 
 # -------------------------
 # Profile & Registration
@@ -124,40 +137,58 @@ class LogoutAndBlacklistRefreshView(APIView):
         return response
 
 
-# -------------------------
-# Google Social Login
-# -------------------------
+
+
+
+
+
+
+# -from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client
+from dj_rest_auth.registration.views import SocialLoginView
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+
 class GoogleLogin(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
+    client_class = GoogleOAuth2Client  # use custom client
+    callback_url = "http://localhost:5173"
 
-    def get_response(self):
-        """Return JWT tokens + set refresh cookie"""
-        user = self.user
+    def post(self, request, *args, **kwargs):
+        try:
+            response = super().post(request, *args, **kwargs)
 
-        refresh = RefreshToken.for_user(user)
-        access = refresh.access_token
+            user = getattr(self, 'user', None)
+            if user:
+                refresh = RefreshToken.for_user(user)
+                response_data = {
+                    "access": str(refresh.access_token),
+                    "refresh": str(refresh),
+                    "user": {
+                        "id": user.id,
+                        "email": user.email,
+                        "first_name": user.first_name or "",
+                        "last_name": user.last_name or "",
+                    },
+                }
 
-        response_data = {
-            "access": str(access),
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-            },
-        }
+                response = Response(response_data, status=status.HTTP_200_OK)
+                response.set_cookie(
+                    key='refresh_token',
+                    value=str(refresh),
+                    httponly=True,
+                    secure=not settings.DEBUG,
+                    samesite='Lax',
+                    max_age=int(settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds()),
+                    path='/',
+                )
+                return response
 
-        response = Response(response_data, status=status.HTTP_200_OK)
+            return response
 
-        # Set HttpOnly cookie for refresh token
-        response.set_cookie(
-            key=COOKIE_NAME,
-            value=str(refresh),
-            httponly=True,
-            secure=not settings.DEBUG,
-            samesite="Lax",
-            path=COOKIE_PATH,
-            max_age=int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds()),
-        )
-
-        return response
+        except Exception as e:
+            return Response(
+                {"error": "Google authentication failed", "details": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
