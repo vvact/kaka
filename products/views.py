@@ -41,6 +41,30 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         if search:
             qs = qs.filter(Q(name__icontains=search) | Q(slug__icontains=search))
 
+        # --- CATEGORY FILTER ---
+        category_slug = self.request.query_params.get("category")
+        if category_slug and category_slug.lower() != "all":
+            qs = qs.filter(category__slug=category_slug)
+
+        # --- SORTING ---
+        sort = self.request.query_params.get("sort")
+        if sort == "newest":
+            qs = qs.order_by("-created_at")
+        elif sort == "featured":
+            qs = qs.order_by("-is_featured", "-created_at")
+        elif sort == "price-low":
+            qs = qs.annotate(min_price=Case(
+                When(has_variants=False, then=Coalesce("discount_price", "base_price")),
+                default=Min("variants__price"),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )).order_by("min_price")
+        elif sort == "price-high":
+            qs = qs.annotate(min_price=Case(
+                When(has_variants=False, then=Coalesce("discount_price", "base_price")),
+                default=Min("variants__price"),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )).order_by("-min_price")
+
         # --- PRICE RANGE ANNOTATIONS ---
         qs = qs.annotate(
             min_price=Case(
@@ -58,9 +82,6 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=True, methods=["post"])
     def variant_lookup(self, request, slug=None):
-        """
-        Given a list of attribute value IDs, return the matching variant.
-        """
         product = self.get_object()
         value_ids = request.data.get("value_ids") or []
         if not isinstance(value_ids, list) or not value_ids:
@@ -87,17 +108,11 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class VariantViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Read-only Variant endpoints.
-    """
     serializer_class = VariantSerializer
     queryset = Variant.objects.prefetch_related("attributes__attribute", "image").select_related("product")
 
 
 class ProductListViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Alternative product list view with filters (featured/new arrivals).
-    """
     serializer_class = ProductListSerializer
     queryset = Product.objects.all().prefetch_related("images")
 
@@ -108,6 +123,11 @@ class ProductListViewSet(viewsets.ReadOnlyModelViewSet):
         search = self.request.query_params.get("search")
         if search:
             qs = qs.filter(Q(name__icontains=search) | Q(slug__icontains=search))
+
+        # --- CATEGORY FILTER ---
+        category_slug = self.request.query_params.get("category")
+        if category_slug and category_slug.lower() != "all":
+            qs = qs.filter(category__slug=category_slug)
 
         # --- FEATURED FILTER ---
         featured = self.request.query_params.get("featured")
@@ -122,6 +142,25 @@ class ProductListViewSet(viewsets.ReadOnlyModelViewSet):
                 qs = qs.filter(created_at__gte=last_30_days)
             else:
                 qs = qs.exclude(created_at__gte=last_30_days)
+
+        # --- SORTING ---
+        sort = self.request.query_params.get("sort")
+        if sort == "newest":
+            qs = qs.order_by("-created_at")
+        elif sort == "featured":
+            qs = qs.order_by("-is_featured", "-created_at")
+        elif sort == "price-low":
+            qs = qs.annotate(min_price=Case(
+                When(has_variants=False, then=Coalesce("discount_price", "base_price")),
+                default=Min("variants__price"),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )).order_by("min_price")
+        elif sort == "price-high":
+            qs = qs.annotate(min_price=Case(
+                When(has_variants=False, then=Coalesce("discount_price", "base_price")),
+                default=Min("variants__price"),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )).order_by("-min_price")
 
         # --- PRICE RANGE ---
         qs = qs.annotate(
@@ -140,11 +179,6 @@ class ProductListViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Category endpoints:
-      - list: categories with product count (for sidebar/homepage)
-      - retrieve: category with products & annotated prices
-    """
     serializer_class = CategorySerializer
     queryset = Category.objects.all()
     lookup_field = "slug"

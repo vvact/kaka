@@ -205,7 +205,17 @@ class ProductListSerializer(serializers.ModelSerializer):
 # --- 2️⃣ Category detail serializer with products ---
 class CategoryDetailSerializer(serializers.ModelSerializer):
     products = ProductListSerializer(many=True, read_only=True)
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Category
         fields = ["id", "name", "slug", "image", "products"]
+
+    def get_image(self, obj):
+        request = self.context.get("request")
+        if obj.image:
+            url = obj.image.url
+            if request:
+                return request.build_absolute_uri(url)
+            return url
+        return None
