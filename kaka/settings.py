@@ -32,7 +32,7 @@ SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
 
 # ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="127.0.0.1,localhost", cast=Csv())
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "www.gentlemanwell.shop", "gentlemanwell.shop" , 
+ALLOWED_HOSTS = ["localhost", "185.122.164.139", "127.0.0.1", "www.gentlemanwell.shop", "gentlemanwell.shop" , 
 "api.gentlemanwell.shop"]
 
 
@@ -147,25 +147,25 @@ WSGI_APPLICATION = "kaka.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         default=os.getenv("DATABASE_URL", "sqlite:///db.sqlite3"),
+#         conn_max_age=600,
+#         ssl_require=False
+#     )
+# }
+
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv("DATABASE_URL", "sqlite:///db.sqlite3"),
-        conn_max_age=600,
-        ssl_require=False
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get("POSTGRES_DB", "manwell"),
+        'USER': os.environ.get("POSTGRES_USER", "manwell"),
+        'PASSWORD': os.environ.get("POSTGRES_PASSWORD", "buda123$"),
+        'HOST': os.environ.get("POSTGRES_HOST", "localhost"),
+        'PORT': os.environ.get("POSTGRES_PORT", "5432"),
+    }
 }
 
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.environ.get("POSTGRES_DB", "ecommerce_db"),
-#         'USER': os.environ.get("POSTGRES_USER", "manwell"),
-#         'PASSWORD': os.environ.get("POSTGRES_PASSWORD", "buda123"),
-#         'HOST': os.environ.get("POSTGRES_HOST", "postgres-db"),
-#         'PORT': os.environ.get("POSTGRES_PORT", "5432"),
-#     }
-# }
 
 
 AUTH_USER_MODEL = "accounts.User"
