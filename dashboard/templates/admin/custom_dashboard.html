@@ -1,0 +1,167 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h1>Welcome to Manwell E-Commerce Dashboard</h1>
+
+    <div class="cards">
+        <div class="card">
+            <h3>Total Products</h3>
+            <p>{{ total_products }}</p>
+        </div>
+        <div class="card">
+            <h3>Total Orders</h3>
+            <p>{{ total_orders }}</p>
+        </div>
+        <div class="card">
+            <h3>Categories</h3>
+            <p>{{ total_categories }}</p>
+        </div>
+        <div class="card {% if new_orders_count > 0 %}card-new-orders{% endif %}">
+            <h3>New Orders</h3>
+            <p>{{ new_orders_count }}</p>
+        </div>
+    </div>
+
+    <div class="recent-products">
+        <h2>Recent Products</h2>
+        <ul>
+            {% for product in recent_products %}
+                <li>
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-thumb">
+                    {% endif %}
+                    {{ product.name }} - 
+                    <span class="{% if product.stock < 5 %}low-stock{% endif %}">
+                        {{ product.stock }} in stock
+                    </span>
+                </li>
+            {% empty %}
+                <li>No recent products found.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="recent-orders">
+        <h2>Recent Orders</h2>
+        <ul>
+            {% for order in recent_orders %}
+                <li>
+                    Order #{{ order.id }} - {{ order.customer.email }} - 
+                    <span class="status-{{ order.status }}">{{ order.status|title }}</span>
+                </li>
+            {% empty %}
+                <li>No recent orders found.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<link rel="stylesheet" href="{% static 'dashboard/custom_dashboard.css' %}">
+{% endblock %}
+
+{% block extrahead %}
+<style>
+:root {
+    --deep-navy: #0A1931;
+    --light-navy: #1E3A5F;
+    --gold: #D4AF37;
+    --white: #FFFFFF;
+    --shadow: rgba(10, 25, 49, 0.25);
+}
+
+.dashboard-container {
+    padding: 20px;
+    font-family: 'Poppins', sans-serif;
+    color: var(--white);
+}
+
+.cards {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: var(--light-navy);
+    flex: 1;
+    min-width: 180px;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px var(--shadow);
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+}
+
+.card h3 {
+    margin-bottom: 10px;
+    color: var(--gold);
+}
+
+.card p {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.card-new-orders {
+    border: 2px solid var(--gold);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.recent-products, .recent-orders {
+    margin-top: 30px;
+}
+
+.recent-products ul, .recent-orders ul {
+    list-style: none;
+    padding: 0;
+}
+
+.recent-products li, .recent-orders li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.product-thumb {
+    height: 50px;
+    margin-right: 10px;
+    border-radius: 6px;
+}
+
+.low-stock {
+    color: red;
+    font-weight: bold;
+}
+
+.status-pending {
+    color: orange;
+    font-weight: bold;
+}
+
+.status-completed {
+    color: green;
+    font-weight: bold;
+}
+
+.status-cancelled {
+    color: red;
+    font-weight: bold;
+}
+
+@media (max-width: 768px) {
+    .cards { flex-direction: column; }
+}
+</style>
+{% endblock %}

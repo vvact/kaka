@@ -4,7 +4,26 @@ from .models import (
     Product, Variant, ProductImage, VariantImage,
     Attribute, AttributeValue,Category
 )
+from django.contrib import admin
 
+admin.site.site_header = "Wellcome to Manwell Admin"
+admin.site.site_title = "Wellcome to Manwell Dashboard"
+admin.site.index_title = "Wellcome to Manwell E-Commerce Management"
+
+
+from django.contrib import admin
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.admin.sites import AdminSite
+
+# 1. Define custom admin login form
+class CustomAdminLoginForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs.update({'class': 'form-control'})
+        self.fields['password'].widget.attrs.update({'class': 'form-control'})
+
+# 2. Apply it to the admin site
+AdminSite.login_form = CustomAdminLoginForm
 
 
 class CategoryInline(admin.TabularInline):

@@ -13,6 +13,7 @@ def health(request):
     return JsonResponse({"status": "ok"})
 
 urlpatterns = [
+    path('admin/', include('dashboard.urls')),
     path('admin/', admin.site.urls),
     path('', root_view),
     path('health/', health, name='health'),  # Healthcheck at root

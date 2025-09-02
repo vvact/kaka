@@ -32,8 +32,14 @@ SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
 
 # ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="127.0.0.1,localhost", cast=Csv())
-ALLOWED_HOSTS = ["localhost", "185.122.164.139", "127.0.0.1", "www.gentlemanwell.shop", "gentlemanwell.shop" , 
-"api.gentlemanwell.shop"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "185.122.164.139",
+    "www.gentlemanwell.shop",
+    "gentlemanwell.shop",
+    "api.gentlemanwell.shop",
+]
 
 
 # Application definition
@@ -45,8 +51,9 @@ DJANGO_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-]
 
+]
+LOGIN_REDIRECT_URL = '/admin/' 
 THIRD_PARTY_APPS = [
     'whitenoise.runserver_nostatic',
     'cloudinary',
@@ -61,6 +68,8 @@ THIRD_PARTY_APPS = [
     'allauth.socialaccount.providers.google',
     'dj_rest_auth',
     'dj_rest_auth.registration',
+    'widget_tweaks',
+
 ]
 
 LOCAL_APPS = [
@@ -69,6 +78,7 @@ LOCAL_APPS = [
     'cart',
     'moments',
     'orders',
+    'dashboard',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -128,7 +138,7 @@ ROOT_URLCONF = "kaka.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        'DIRS': [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -147,24 +157,24 @@ WSGI_APPLICATION = "kaka.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': dj_database_url.config(
-#         default=os.getenv("DATABASE_URL", "sqlite:///db.sqlite3"),
-#         conn_max_age=600,
-#         ssl_require=False
-#     )
-# }
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get("POSTGRES_DB", "manwell"),
-        'USER': os.environ.get("POSTGRES_USER", "manwell"),
-        'PASSWORD': os.environ.get("POSTGRES_PASSWORD", "buda123$"),
-        'HOST': os.environ.get("POSTGRES_HOST", "localhost"),
-        'PORT': os.environ.get("POSTGRES_PORT", "5432"),
-    }
+    'default': dj_database_url.config(
+        default=os.getenv("DATABASE_URL", "sqlite:///db.sqlite3"),
+        conn_max_age=600,
+        ssl_require=False
+    )
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.environ.get("POSTGRES_DB", "manwell"),
+#         'USER': os.environ.get("POSTGRES_USER", "manwell"),
+#         'PASSWORD': os.environ.get("POSTGRES_PASSWORD", "buda123$"),
+#         'HOST': os.environ.get("POSTGRES_HOST", "localhost"),
+#         'PORT': os.environ.get("POSTGRES_PORT", "5432"),
+#     }
+# }
 
 
 
@@ -203,13 +213,22 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = "static/"
-STATICFILES_DIRS = [BASE_DIR / 'static']
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+# =============================
+# STATIC FILES
+# =============================
+STATIC_URL = '/static/'  # leading slash is required
+STATICFILES_DIRS = [BASE_DIR / 'static']  # for development
+STATIC_ROOT = BASE_DIR / 'staticfiles'   # where collectstatic will copy files
+
+# Whitenoise (optional fallback if Nginx misses something)
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-MEDIA_URL = "media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+# =============================
+# MEDIA FILES
+# =============================
+MEDIA_URL = '/media/'   # leading slash is required
+MEDIA_ROOT = BASE_DIR / 'media'  # where uploaded media files will be stored
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

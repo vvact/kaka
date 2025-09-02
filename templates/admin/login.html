@@ -1,0 +1,272 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block extrastyle %}
+
+{{ block.super }}
+
+<!-- Favicons -->
+<link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicons/apple-touch-icon.png' %}">
+<link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicons/favicon-32x32.png' %}">
+<link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicons/favicon-16x16.png' %}">
+<link rel="shortcut icon" href="{% static 'favicons/favicon.ico' %}" type="image/x-icon">
+<link rel="manifest" href="{% static 'favicons/site.webmanifest' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --deep-navy: #0A1931;
+    --gold: #D4AF37;
+    --light-navy: #1E3A5F;
+    --white: #FFFFFF;
+    --shadow: rgba(10, 25, 49, 0.25);
+}
+
+body {
+    background: linear-gradient(135deg, var(--deep-navy), var(--light-navy));
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Poppins', sans-serif;
+    padding: 20px;
+    color: var(--white);
+}
+
+.custom-login-container {
+    background: var(--deep-navy);
+    width: 100%;
+    max-width: 440px;
+    border-radius: 16px;
+    box-shadow: 0 15px 30px var(--shadow);
+    overflow: hidden;
+}
+
+.premium-header {
+    background: linear-gradient(135deg, var(--deep-navy), var(--light-navy));
+    padding: 30px 20px;
+    text-align: center;
+    position: relative;
+}
+
+.premium-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: var(--gold);
+    color: var(--deep-navy);
+    font-size: 10px;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.logo-container {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.login-logo {
+    height: 70px;
+    filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2));
+}
+
+.logo-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, var(--gold) 0%, transparent 70%);
+    opacity: 0.3;
+    z-index: -1;
+    border-radius: 50%;
+}
+
+.login-title {
+    color: var(--gold);
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.login-subtitle {
+    color: #F1E5AC;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.login-content {
+    padding: 30px 25px;
+}
+
+.form-row {
+    margin-bottom: 20px;
+}
+
+input.form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid var(--gold);
+    font-size: 16px;
+    background: var(--light-navy);
+    color: var(--gold);
+    transition: all 0.3s;
+}
+
+input.form-control::placeholder {
+    color: rgba(212,175,55,0.7);
+}
+
+input.form-control:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(212,175,55,0.2);
+}
+
+.password-wrapper {
+    position: relative;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--gold);
+    border: none;
+    background: none;
+}
+
+.toggle-password:hover {
+    color: #F1E5AC;
+}
+
+button[type="submit"] {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(to right, var(--deep-navy), var(--light-navy));
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 10px var(--shadow);
+    transition: all 0.3s ease;
+}
+
+button[type="submit"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px var(--shadow);
+}
+
+.strength-meter {
+    height: 5px;
+    border-radius: 5px;
+    margin-top: 5px;
+    background: #444;
+}
+
+.strength-weak { background: red; }
+.strength-medium { background: orange; }
+.strength-strong { background: green; }
+
+.login-footer {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 13px;
+    color: #F1E5AC;
+}
+
+@media (max-width: 480px) {
+    .custom-login-container { padding: 20px; }
+    .login-logo { height: 60px; }
+    .login-title { font-size: 22px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="custom-login-container">
+    <div class="premium-header">
+        <div class="premium-badge">Premium</div>
+        <h1 class="login-title">Welcome to Manwell Admin</h1>
+        <p class="login-subtitle">Secure access to your dashboard</p>
+    </div>
+
+    <div class="login-content">
+        <form method="post" action="{% url 'admin:login' %}" id="login-form">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <p class="errornote">Invalid username or password.</p>
+            {% endif %}
+
+            <div class="form-row">
+                <label for="{{ form.username.id_for_label }}">Username</label>
+                {{ form.username|add_class:"form-control" }}
+            </div>
+
+            <div class="form-row password-wrapper">
+                <label for="{{ form.password.id_for_label }}">Password</label>
+                {{ form.password|add_class:"form-control" }}
+                <button type="button" class="toggle-password" id="toggle-password">
+                    <i class="far fa-eye"></i>
+                </button>
+                <div class="strength-meter" id="password-strength-meter"></div>
+            </div>
+
+            <button type="submit">Sign In</button>
+        </form>
+
+        <div class="login-footer">
+            <p>© 2025 Manwell. All rights reserved.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrahead %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const passwordInput = document.querySelector('input[name="password"]');
+    const togglePassword = document.getElementById("toggle-password");
+    const eyeIcon = togglePassword.querySelector('i');
+    const strengthMeter = document.getElementById("password-strength-meter");
+
+    togglePassword.addEventListener("click", function() {
+        const type = passwordInput.type === "password" ? "text" : "password";
+        passwordInput.type = type;
+        eyeIcon.classList.toggle('fa-eye');
+        eyeIcon.classList.toggle('fa-eye-slash');
+    });
+
+    passwordInput.addEventListener("input", function() {
+        const val = passwordInput.value;
+        let strength = 0;
+        if(val.length > 10) strength = 3;
+        else if(val.length > 6) strength = 2;
+        else if(val.length > 0) strength = 1;
+
+        strengthMeter.className = 'strength-meter';
+        if(strength === 1) strengthMeter.classList.add('strength-weak');
+        else if(strength === 2) strengthMeter.classList.add('strength-medium');
+        else if(strength === 3) strengthMeter.classList.add('strength-strong');
+    });
+});
+</script>
+{% endblock %}
