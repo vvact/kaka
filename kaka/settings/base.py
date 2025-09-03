@@ -252,6 +252,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://gentlemanwell.shop",
     "https://www.gentlemanwell.shop",
     "https://api.gentlemanwell.shop",
+    "https://gentlemanwell.shop",
     "http://127.0.0.1:5173",
     "http://localhost:5173",
 ]
@@ -259,6 +260,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "https://gentlemanwell.shop",
     "https://www.gentlemanwell.shop",
     "https://api.gentlemanwell.shop",
     "http://localhost:5173",
