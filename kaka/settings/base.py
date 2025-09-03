@@ -3,7 +3,8 @@ import os
 from pathlib import Path
 from decouple import config, Csv
 import cloudinary
-import dj_database_url
+from datetime import timedelta
+
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -89,9 +90,9 @@ REST_USE_JWT = True
 SOCIALACCOUNT_AUTO_SIGNUP = True
 
 # Email-only authentication (modern allauth)
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None        # no username field
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']  # required fields for signup
-ACCOUNT_LOGIN_METHODS = {'email'}              # login with email only
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None 
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']  
+ACCOUNT_LOGIN_METHODS = {'email'}
 
 # Google OAuth Configuration
 SOCIALACCOUNT_PROVIDERS = {
@@ -102,7 +103,7 @@ SOCIALACCOUNT_PROVIDERS = {
         ],
         'AUTH_PARAMS': {
             'access_type': 'online',
-            'prompt': 'select_account',  # Force account selection
+            'prompt': 'select_account',
         },
         'METHOD': 'oauth2',
         'OAUTH_PKCE_ENABLED': True,
@@ -128,7 +129,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    # Add this line for django-allauth
     'allauth.account.middleware.AccountMiddleware',
 
 ]
@@ -154,31 +154,11 @@ TEMPLATES = [
 WSGI_APPLICATION = "kaka.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv("DATABASE_URL", "sqlite:///db.sqlite3"),
-        conn_max_age=600,
-        ssl_require=False
-    )
-}
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.environ.get("POSTGRES_DB", "manwell"),
-#         'USER': os.environ.get("POSTGRES_USER", "manwell"),
-#         'PASSWORD': os.environ.get("POSTGRES_PASSWORD", "buda123$"),
-#         'HOST': os.environ.get("POSTGRES_HOST", "localhost"),
-#         'PORT': os.environ.get("POSTGRES_PORT", "5432"),
-#     }
-# }
 
 
-
+# customU User
 AUTH_USER_MODEL = "accounts.User"
+
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
@@ -201,13 +181,11 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
-
-TIME_ZONE = "UTC"
-
+LANGUAGE_CODE = "en-ke"
+TIME_ZONE = "Africa/Nairobi"
 USE_I18N = True
-
 USE_TZ = True
+
 
 
 # Static files (CSS, JavaScript, Images)
@@ -271,11 +249,8 @@ CSRF_COOKIE_SECURE = False
 
 # Trusted origins for CSRF POST requests
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "https://localhost:3000", 
     "https://gentlemanwell.shop",
     "https://www.gentlemanwell.shop",
-    "https://man.frogflyer.xyz",
     "https://api.gentlemanwell.shop",
     "http://127.0.0.1:5173",
     "http://localhost:5173",
@@ -285,32 +260,11 @@ CSRF_TRUSTED_ORIGINS = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://www.gentlemanwell.shop",
-    "https://man.frogflyer.xyz",
     "https://api.gentlemanwell.shop",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
 CORS_ALLOW_CREDENTIALS = True
-
-
-# ------------------ REDIS / CACHE ------------------
-# REDIS_URL = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/1")
-
-# CACHES = {
-#     "default": {
-#         "BACKEND": "django_redis.cache.RedisCache",
-#         "LOCATION": REDIS_URL,
-#         "OPTIONS": {
-#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-#         }
-#     }
-# }
-
-
-# ------------------ CELERY ------------------
-CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/0")
-CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/0")
-
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 209715200 
 FILE_UPLOAD_MAX_MEMORY_SIZE = 209715200 
