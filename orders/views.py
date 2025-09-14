@@ -1,49 +1,87 @@
 # orders/views.py
-from rest_framework import generics, permissions, status
+from decimal import Decimal
+from rest_framework import generics, status
 from rest_framework.response import Response
-from .models import Order, OrderItem
-from .serializers import OrderSerializer, CreateOrderSerializer
-from cart.models import Cart  # adjust if your Cart model is in another app
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
-class OrderListCreateAPIView(generics.ListCreateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+from cart.models import Cart
+from cart.utils import clear_cart
+from .models import Order, OrderItem
+from .serializers import OrderSerializer
+
+
+def get_cart(request):
+    if request.user.is_authenticated:
+        return Cart.objects.filter(user=request.user).first()
+    else:
+        session_key = request.session.session_key
+        if not session_key:
+            return None
+        return Cart.objects.filter(session_key=session_key, user=None).first()
+
+
+class CheckoutView(generics.GenericAPIView):
+    permission_classes = [AllowAny]
     serializer_class = OrderSerializer
 
-    def get_queryset(self):
-        return Order.objects.filter(user=self.request.user).order_by('-created_at')
-
     def post(self, request, *args, **kwargs):
-        serializer = CreateOrderSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        cart = get_cart(request)
+        if not cart or not cart.items.exists():
+            return Response({"cart": "No active cart found or cart is empty."}, status=400)
 
-        # Get user's cart
-        cart = Cart.objects.filter(user=request.user).first()
-        if not cart or cart.items.count() == 0:
-            return Response({"detail": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST)
+        full_name = request.data.get("full_name")
+        phone = request.data.get("phone")
+        address = request.data.get("address")
+
+        if not full_name or not phone or not address:
+            return Response({"error": "Full name, phone, and address are required."}, status=400)
 
         # Create order
         order = Order.objects.create(
-            user=request.user,
-            payment_method=serializer.validated_data['payment_method'],
-            delivery_address=serializer.validated_data.get('delivery_address', ''),
-            contact_phone=serializer.validated_data['contact_phone'],
-            total_amount=sum([item.price * item.quantity for item in cart.items.all()])
+            user=request.user if request.user.is_authenticated else None,
+            session_key=None if request.user.is_authenticated else request.session.session_key,
+            full_name=full_name,
+            phone=phone,
+            address=address,
         )
 
-        # Create order items
+        # Copy items from cart
         for item in cart.items.all():
+            product = item.product
+            price = product.discount_price if product.discount_price else product.base_price
+
             OrderItem.objects.create(
                 order=order,
-                product=item.product,
+                product=product,
                 quantity=item.quantity,
-                unit_price=item.price
+                price=price,
             )
 
-        # Clear cart
-        cart.items.all().delete()
-        cart.cart_total = 0
-        cart.item_count = 0
-        cart.save()
+            # Decrease stock (basic inventory control)
+            if product.stock >= item.quantity:
+                product.stock -= item.quantity
+                product.save(update_fields=["stock"])
 
-        return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
+        # ✅ Clear the cart safely
+        if request.user.is_authenticated:
+            clear_cart(user=request.user)
+        else:
+            clear_cart(session_key=request.session.session_key)
 
+        return Response(OrderSerializer(order).data, status=201)
+
+
+class OrderListView(generics.ListAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user).order_by("-created_at")
+
+
+class OrderDetailView(generics.RetrieveAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user)

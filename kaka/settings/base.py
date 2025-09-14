@@ -1,9 +1,8 @@
 from datetime import timedelta
 import os
 from pathlib import Path
-from decouple import config, Csv
+from decouple import config
 import cloudinary
-from datetime import timedelta
 
 
 
@@ -67,8 +66,6 @@ THIRD_PARTY_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    'dj_rest_auth',
-    'dj_rest_auth.registration',
     'widget_tweaks',
 
 ]
@@ -86,7 +83,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 SITE_ID = 1
 
-REST_USE_JWT = True 
+# Allauth configuration
 SOCIALACCOUNT_AUTO_SIGNUP = True
 
 # Email-only authentication (modern allauth)
@@ -215,26 +212,27 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.AllowAny", 
     ),
 }
 
 
-# Simple JWT config - rotation + blacklist ON
+
 SIMPLE_JWT = {
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': os.environ.get('SECRET_KEY', 'change-me-in-prod'),  # use env var
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=240),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'UPDATE_LAST_LOGIN': True,
-    # optionally tighten JTI & token claims
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=240),  # 4 hours
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "UPDATE_LAST_LOGIN": True,
 }
+
 
 
 # ------------------ SESSION ------------------
