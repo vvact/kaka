@@ -1,7 +1,5 @@
-# orders/serializers.py
 from rest_framework import serializers
 from .models import Order, OrderItem
-
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source="product.name", read_only=True)
@@ -28,7 +26,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
         return None
 
     def get_total_price(self, obj):
-        return str(obj.quantity * obj.price)
+        return obj.quantity * obj.price
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -49,4 +47,4 @@ class OrderSerializer(serializers.ModelSerializer):
         ]
 
     def get_order_total(self, obj):
-        return str(sum(item.quantity * item.price for item in obj.items.all()))
+        return sum(item.quantity * item.price for item in obj.items.all())
