@@ -12,7 +12,8 @@ ALLOWED_HOSTS = [
     "www.gentlemanwell.shop",
     "api.gentlemanwell.shop",
     "localhost", 
-    "127.0.0.1",        
+    "127.0.0.1",
+    "https://men-boutique.vercel.app",      
 ]
 
 # ----------------------------
